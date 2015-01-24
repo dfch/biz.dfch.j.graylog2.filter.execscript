@@ -43,8 +43,13 @@ public class dfchBizExecScript implements MessageFilter
     private static final String DF_SCRIPT_DISPLAY_OUTPUT = "DF_SCRIPT_DISPLAY_OUTPUT";
     private static final String DF_SCRIPT_CACHE_CONTENTS = "DF_SCRIPT_CACHE_CONTENTS";
     private static final String DF_PLUGIN_PRIORITY = "DF_PLUGIN_PRIORITY";
+    private static final String DF_PLUGIN_DROP_MESSAGE = "DF_PLUGIN_DROP_MESSAGE";
+    private static final String DF_PLUGIN_DISABLED = "DF_PLUGIN_DISABLED";
 
+    // for performance reasons these configuration items have internal variables
+    // DF_PLUGIN_DISABLED, DF_PLUGIN_DROP_MESSAGE
     private boolean _isRunning = false;
+    private boolean _dropMessage = false;
     private Configuration _configuration;
     private String _configurationFileName;
     
@@ -97,6 +102,8 @@ public class dfchBizExecScript implements MessageFilter
             Boolean scriptCacheContents = (Boolean) jsonObject.get(DF_SCRIPT_CACHE_CONTENTS);
             Boolean scriptDisplayOutput = (Boolean) jsonObject.get(DF_SCRIPT_DISPLAY_OUTPUT);
             String pluginPriority = (String) jsonObject.get(DF_PLUGIN_PRIORITY);
+            Boolean pluginDropMessage = (Boolean) jsonObject.get(DF_PLUGIN_DROP_MESSAGE);
+            Boolean pluginDisabled = (Boolean) jsonObject.get(DF_PLUGIN_DISABLED);
 
             // set configuration
             Map<String, Object> map = new HashMap();
@@ -105,6 +112,8 @@ public class dfchBizExecScript implements MessageFilter
             map.put(DF_SCRIPT_DISPLAY_OUTPUT, scriptDisplayOutput);
             map.put(DF_SCRIPT_CACHE_CONTENTS, scriptCacheContents);
             map.put(DF_PLUGIN_PRIORITY, pluginPriority);
+            map.put(DF_PLUGIN_DROP_MESSAGE, pluginDropMessage);
+            map.put(DF_PLUGIN_DISABLED, pluginDisabled);
 
             initialize(new Configuration(map));
         }
@@ -133,13 +142,16 @@ public class dfchBizExecScript implements MessageFilter
             System.out.printf("DF_SCRIPT_DISPLAY_OUTPUT : %b\r\n", _configuration.getBoolean(DF_SCRIPT_DISPLAY_OUTPUT));
             System.out.printf("DF_SCRIPT_CACHE_CONTENTS : %b\r\n", _configuration.getBoolean(DF_SCRIPT_CACHE_CONTENTS));
             System.out.printf("DF_PLUGIN_PRIORITY       : %d\r\n", Integer.parseInt(_configuration.getString(DF_PLUGIN_PRIORITY)));
+            System.out.printf("DF_PLUGIN_DROP_MESSAGE   : %b\r\n", _configuration.getBoolean(DF_PLUGIN_DROP_MESSAGE));
+            System.out.printf("DF_PLUGIN_DISABLED       : %b\r\n", _configuration.getBoolean(DF_PLUGIN_DISABLED));
             //System.out.printf("DF_PLUGIN_PRIORITY       : %d\r\n", (int) _configuration.getInt(DF_PLUGIN_PRIORITY));
 
             _file = new File(_configuration.getString(DF_SCRIPT_PATH_AND_NAME));
             _scriptEngine = _scriptEngineManager.getEngineByName(_configuration.getString(DF_SCRIPT_ENGINE));
             _scriptContext = _scriptEngine.getContext();
 
-            _isRunning = true;
+            _dropMessage = configuration.getBoolean(DF_PLUGIN_DROP_MESSAGE);
+            _isRunning = !_configuration.getBoolean(DF_PLUGIN_DISABLED);
 
             System.out.printf("*** [%d] %s: Initialising plugin SUCCEEDED. Configuration loaded from '%s'. \r\n", Thread.currentThread().getId(), DF_PLUGIN_NAME, _configurationFileName);
         }
@@ -190,7 +202,7 @@ public class dfchBizExecScript implements MessageFilter
         {
             ex.printStackTrace();
         }
-        return false;
+        return _dropMessage;
     }
 
     @Override
