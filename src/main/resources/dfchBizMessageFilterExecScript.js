@@ -6,3 +6,5 @@ print("Now this is a message: " + message + "\r\n");
 
 // get specific additpional field in message
 //print(message.getField("guid") + "\r\n");
+// add field
+//message.addField("FullName", "Edgar Schnittenfittich);
