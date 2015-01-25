@@ -189,9 +189,6 @@ public class dfchBizExecScript implements MessageFilter
             {
                 System.out.printf("%s\r\n", stringWriter.toString());
             }
-
-            msg.addField("DF_PLUGIN_NAME", DF_PLUGIN_NAME);
-
         }
         catch (IOException ex)
         {
