@@ -26,7 +26,10 @@ Other Plugins
 -------------
 
 * [biz.dfch.j.graylog2.plugin.alarm.execscript](https://github.com/dfch/biz.dfch.j.graylog2.plugin.alarm.execscript) 
+
   This is an [AlarmCallback](https://www.graylog2.org/resources/documentation/general/plugins) plugin that does essentially the same as the output plugin, but lets you run scripts based on alarm conditions (similar to [graylog2-plugin-alarmcallback-exec](https://github.com/lennartkoopmann/graylog2-plugin-alarmcallback-exec))
 
-* [biz.dfch.j.graylog2.plugin.output.execscript](https://github.com/dfch/biz.dfch.j.graylog2.plugin.output.execscript)   This is a [Output](https://www.graylog2.org/resources/documentation/general/plugins) plugin that can forward every message based on a stream rule.
+* [biz.dfch.j.graylog2.plugin.output.execscript](https://github.com/dfch/biz.dfch.j.graylog2.plugin.output.execscript)
+
+  This is a [Output](https://www.graylog2.org/resources/documentation/general/plugins) plugin that can forward every message based on a stream rule.
 
