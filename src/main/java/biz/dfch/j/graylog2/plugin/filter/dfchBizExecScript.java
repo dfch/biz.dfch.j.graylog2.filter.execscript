@@ -3,11 +3,8 @@ package biz.dfch.j.graylog2.plugin.filter;
 import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.security.CodeSource;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.script.ScriptContext;
@@ -16,10 +13,6 @@ import javax.script.ScriptEngineManager;
 
 import org.apache.commons.io.FilenameUtils;
 import org.graylog2.plugin.configuration.Configuration;
-import org.graylog2.plugin.configuration.ConfigurationRequest;
-import org.graylog2.plugin.configuration.fields.BooleanField;
-import org.graylog2.plugin.configuration.fields.ConfigurationField;
-import org.graylog2.plugin.configuration.fields.TextField;
 import org.graylog2.plugin.Message;
 import org.graylog2.plugin.filters.*;
 
@@ -59,7 +52,7 @@ public class dfchBizExecScript implements MessageFilter
 
     private static final Logger LOG = LoggerFactory.getLogger(dfchBizExecScript.class);
 
-    public dfchBizExecScript() throws IOException, URISyntaxException, Exception
+    public dfchBizExecScript() throws IOException, URISyntaxException
     {
         try
         {
@@ -104,7 +97,7 @@ public class dfchBizExecScript implements MessageFilter
             Boolean pluginDisabled = (Boolean) jsonObject.get(DF_PLUGIN_DISABLED);
 
             // set configuration
-            Map<String, Object> map = new HashMap();
+            Map<String, Object> map = new HashMap<>();
             map.put(DF_SCRIPT_ENGINE, scriptEngine);
             map.put(DF_SCRIPT_PATH_AND_NAME, scriptPathAndName);
             map.put(DF_SCRIPT_DISPLAY_OUTPUT, scriptDisplayOutput);
@@ -206,6 +199,7 @@ public class dfchBizExecScript implements MessageFilter
     {
         if(!isRunning.get())
         {
+            // if the plugin is disabled set it to the lowest priority
             return 99;
         }
         return Integer.parseInt(configuration.getString(DF_PLUGIN_PRIORITY));
