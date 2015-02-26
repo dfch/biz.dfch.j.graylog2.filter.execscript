@@ -5,11 +5,14 @@ Plugin: biz.dfch.j.graylog2.plugin.filter.execscript
 
 d-fens GmbH, General-Guisan-Strasse 6, CH-6300 Zug, Switzerland
 
-This Graylog2 Filter Plugin lets you run arbitrary scripts on a Graylog2 node.
+This Graylog Filter Plugin lets you run arbitrary scripts on a Graylog node.
 
 See [Creating a Graylog2 Filter Plugin](http://d-fens.ch/2015/01/25/howto-creating-a-graylog2-filter-plugin/) for further description and examples on how to create plugins.
 
 You can [download the binary](https://drone.io/github.com/dfch/biz.dfch.j.graylog2.plugin.filter.execscript/files) [![Build Status](https://drone.io/github.com/dfch/biz.dfch.j.graylog2.plugin.filter.execscript/status.png)](https://drone.io/github.com/dfch/biz.dfch.j.graylog2.plugin.filter.execscript/latest) at our [drone.io](https://drone.io/github.com/dfch) account, which gets built every time we commit something to the master branch of the repository.
+
+The plugin now works with Graylog version 1.
+
 
 Getting started for users
 -------------------------

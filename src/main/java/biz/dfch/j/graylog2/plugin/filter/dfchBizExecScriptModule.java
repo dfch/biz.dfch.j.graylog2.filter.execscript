@@ -8,8 +8,6 @@ import org.graylog2.plugin.PluginModule;
 public class dfchBizExecScriptModule extends PluginModule {
     @Override
     protected void configure() {
-        registerPlugin(dfchBizExecScriptMetadata.class);
-
         /* Register your plugin types here.
          *
          * Examples:

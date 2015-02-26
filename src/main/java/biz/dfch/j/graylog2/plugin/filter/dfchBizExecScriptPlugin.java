@@ -1,17 +1,27 @@
 package biz.dfch.j.graylog2.plugin.filter;
 
+        import java.util.Arrays;
         import java.util.Collection;
         import org.graylog2.plugin.Plugin;
+        import org.graylog2.plugin.PluginMetaData;
         import org.graylog2.plugin.PluginModule;
         import java.util.Collections;
 
 /**
  * Implement the Plugin interface here.
  */
-public class dfchBizExecScriptPlugin implements Plugin {
+public class dfchBizExecScriptPlugin implements Plugin
+{
     @Override
-    public Collection<PluginModule> modules () {
-        return Collections.<PluginModule>singleton(new dfchBizExecScriptModule());
+    public PluginMetaData metadata()
+    {
+        return new dfchBizExecScriptMetadata();
+    }
+
+    @Override
+    public Collection<PluginModule> modules ()
+    {
+        return Arrays.<PluginModule>asList(new dfchBizExecScriptModule());
     }
 }
 

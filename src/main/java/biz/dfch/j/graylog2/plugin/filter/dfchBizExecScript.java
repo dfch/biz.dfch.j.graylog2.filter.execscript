@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
@@ -34,8 +35,6 @@ import org.slf4j.LoggerFactory;
 public class dfchBizExecScript implements MessageFilter
 {
     private static final String DF_PLUGIN_NAME = "d-fens SCRIPT Filter";
-    private static final String DF_PLUGIN_HUMAN_NAME = "biz.dfch.j.graylog2.plugin.filter.execscript";
-    private static final String DF_PLUGIN_DOC_LINK = "https://github.com/dfch/biz.dfch.j.graylog2.plugin.filter.execscript";
 
     private static final String DF_SCRIPT_ENGINE = "DF_SCRIPT_ENGINE";
     private static final String DF_SCRIPT_PATH_AND_NAME = "DF_SCRIPT_PATH_AND_NAME";
@@ -48,24 +47,23 @@ public class dfchBizExecScript implements MessageFilter
 
     // for performance reasons these configuration items have internal variables
     // DF_PLUGIN_DISABLED, DF_PLUGIN_DROP_MESSAGE
-    private boolean _isRunning = false;
-    private boolean _dropMessage = false;
-    private Configuration _configuration;
-    private String _configurationFileName;
-    
-    private ScriptEngineManager _scriptEngineManager = new ScriptEngineManager();
-    private ScriptEngine _scriptEngine;
-    private ScriptContext _scriptContext;
-    private File _file;
+    private final AtomicBoolean isRunning = new AtomicBoolean(false);
+    private boolean dropMessage = false;
+    private Configuration configuration;
+    private String configurationFileName;
+
+    private ScriptEngineManager scriptEngineManager = new ScriptEngineManager();
+    private ScriptEngine scriptEngine;
+    private ScriptContext scriptContext;
+    private File file;
 
     private static final Logger LOG = LoggerFactory.getLogger(dfchBizExecScript.class);
-
 
     public dfchBizExecScript() throws IOException, URISyntaxException, Exception
     {
         try
         {
-            System.out.printf("*** [%d] %s: Initialising plugin ...\r\n", Thread.currentThread().getId(), DF_PLUGIN_NAME);
+            LOG.debug(String.format("*** [%d] %s: Initialising plugin ...\r\n", Thread.currentThread().getId(), DF_PLUGIN_NAME));
 
             // get config file
             CodeSource codeSource = this.getClass().getProtectionDomain().getCodeSource();
@@ -88,9 +86,9 @@ public class dfchBizExecScript implements MessageFilter
             }
 
             // get config values
-            _configurationFileName = FilenameUtils.concat(path, baseName + ".conf");
+            configurationFileName = FilenameUtils.concat(path, baseName + ".conf");
             JSONParser jsonParser = new JSONParser();
-            Object object = jsonParser.parse(new FileReader(_configurationFileName));
+            Object object = jsonParser.parse(new FileReader(configurationFileName));
 
             JSONObject jsonObject = (JSONObject) object;
             String scriptEngine = (String) jsonObject.get(DF_SCRIPT_ENGINE);
@@ -119,13 +117,13 @@ public class dfchBizExecScript implements MessageFilter
         }
         catch(IOException ex)
         {
-            System.out.printf("*** [%d] %s: Initialising plugin FAILED. Filter will be disabled.\r\n%s\r\n", Thread.currentThread().getId(), DF_PLUGIN_NAME, ex.getMessage());
+            LOG.error(String.format("*** [%d] %s: Initialising plugin FAILED. Filter will be disabled.\r\n%s\r\n", Thread.currentThread().getId(), DF_PLUGIN_NAME, ex.getMessage()));
             LOG.error("*** " + DF_PLUGIN_NAME + "::dfchBizExecScript() - IOException - Filter will be disabled.");
             ex.printStackTrace();
         }
         catch(Exception ex)
         {
-            System.out.printf("*** [%d] %s: Initialising plugin FAILED. Filter will be disabled.\r\n", Thread.currentThread().getId(), DF_PLUGIN_NAME);
+            LOG.error(String.format("*** [%d] %s: Initialising plugin FAILED. Filter will be disabled.\r\n", Thread.currentThread().getId(), DF_PLUGIN_NAME));
             LOG.error("*** " + DF_PLUGIN_NAME + "::dfchBizExecScript() - Exception - Filter will be disabled.");
             ex.printStackTrace();
         }
@@ -136,24 +134,24 @@ public class dfchBizExecScript implements MessageFilter
     {
         try
         {
-            _configuration = configuration;
-            System.out.printf("DF_SCRIPT_ENGINE         : %s\r\n", configuration.getString(DF_SCRIPT_ENGINE));
-            System.out.printf("DF_SCRIPT_PATH_AND_NAME  : %s\r\n", _configuration.getString(DF_SCRIPT_PATH_AND_NAME));
-            System.out.printf("DF_SCRIPT_DISPLAY_OUTPUT : %b\r\n", _configuration.getBoolean(DF_SCRIPT_DISPLAY_OUTPUT));
-            System.out.printf("DF_SCRIPT_CACHE_CONTENTS : %b\r\n", _configuration.getBoolean(DF_SCRIPT_CACHE_CONTENTS));
-            System.out.printf("DF_PLUGIN_PRIORITY       : %d\r\n", Integer.parseInt(_configuration.getString(DF_PLUGIN_PRIORITY)));
-            System.out.printf("DF_PLUGIN_DROP_MESSAGE   : %b\r\n", _configuration.getBoolean(DF_PLUGIN_DROP_MESSAGE));
-            System.out.printf("DF_PLUGIN_DISABLED       : %b\r\n", _configuration.getBoolean(DF_PLUGIN_DISABLED));
-            //System.out.printf("DF_PLUGIN_PRIORITY       : %d\r\n", (int) _configuration.getInt(DF_PLUGIN_PRIORITY));
+            this.configuration = configuration;
+            LOG.trace(String.format("DF_SCRIPT_ENGINE         : %s\r\n", configuration.getString(DF_SCRIPT_ENGINE)));
+            LOG.trace(String.format("DF_SCRIPT_PATH_AND_NAME  : %s\r\n", configuration.getString(DF_SCRIPT_PATH_AND_NAME)));
+            LOG.trace(String.format("DF_SCRIPT_DISPLAY_OUTPUT : %b\r\n", configuration.getBoolean(DF_SCRIPT_DISPLAY_OUTPUT)));
+            LOG.trace(String.format("DF_SCRIPT_CACHE_CONTENTS : %b\r\n", configuration.getBoolean(DF_SCRIPT_CACHE_CONTENTS)));
+            LOG.trace(String.format("DF_PLUGIN_PRIORITY       : %d\r\n", Integer.parseInt(configuration.getString(DF_PLUGIN_PRIORITY))));
+            LOG.trace(String.format("DF_PLUGIN_DROP_MESSAGE   : %b\r\n", configuration.getBoolean(DF_PLUGIN_DROP_MESSAGE)));
+            LOG.trace(String.format("DF_PLUGIN_DISABLED       : %b\r\n", configuration.getBoolean(DF_PLUGIN_DISABLED)));
+            LOG.trace(String.format("DF_PLUGIN_PRIORITY       : %d\r\n", (int) configuration.getInt(DF_PLUGIN_PRIORITY)));
 
-            _file = new File(_configuration.getString(DF_SCRIPT_PATH_AND_NAME));
-            _scriptEngine = _scriptEngineManager.getEngineByName(_configuration.getString(DF_SCRIPT_ENGINE));
-            _scriptContext = _scriptEngine.getContext();
+            file = new File(configuration.getString(DF_SCRIPT_PATH_AND_NAME));
+            scriptEngine = scriptEngineManager.getEngineByName(configuration.getString(DF_SCRIPT_ENGINE));
+            scriptContext = scriptEngine.getContext();
 
-            _dropMessage = configuration.getBoolean(DF_PLUGIN_DROP_MESSAGE);
-            _isRunning = !_configuration.getBoolean(DF_PLUGIN_DISABLED);
+            dropMessage = configuration.getBoolean(DF_PLUGIN_DROP_MESSAGE);
+            isRunning.set(!configuration.getBoolean(DF_PLUGIN_DISABLED));
 
-            System.out.printf("*** [%d] %s: Initialising plugin SUCCEEDED. Configuration loaded from '%s'. \r\n", Thread.currentThread().getId(), DF_PLUGIN_NAME, _configurationFileName);
+            LOG.info(String.format("*** [%d] %s: Initialising plugin SUCCEEDED. Configuration loaded from '%s'. \r\n", Thread.currentThread().getId(), DF_PLUGIN_NAME, configurationFileName));
         }
         catch(Exception ex)
         {
@@ -164,42 +162,38 @@ public class dfchBizExecScript implements MessageFilter
     @Override
     public boolean filter(Message msg)
     {
-        if(!_isRunning)
+        if(!isRunning.get())
         {
             return false;
         }
         try
         {
-            LOG.trace(String.format("Executing '%s' ...", _configuration.getString(DF_SCRIPT_PATH_AND_NAME)));
+            LOG.trace(String.format("Executing '%s' ...", configuration.getString(DF_SCRIPT_PATH_AND_NAME)));
 
             // TODO
-            // add your code to forward messages to where it is needed
+            // add your code to whatever is needed
 
             StringWriter stringWriter = new StringWriter();
-            _scriptContext.setWriter(stringWriter);
-            _scriptEngine.put("message", msg);
+            scriptContext.setWriter(stringWriter);
+            scriptEngine.put("message", msg);
 
-            if(!_configuration.getBoolean(DF_SCRIPT_CACHE_CONTENTS))
+            if(!configuration.getBoolean(DF_SCRIPT_CACHE_CONTENTS))
             {
-                _file = new File(_configuration.getString(DF_SCRIPT_PATH_AND_NAME));
+                file = new File(configuration.getString(DF_SCRIPT_PATH_AND_NAME));
             }
-            Reader _reader = new FileReader(_file);
-            _scriptEngine.eval(_reader);
-            if(_configuration.getBoolean(DF_SCRIPT_DISPLAY_OUTPUT))
+            Reader _reader = new FileReader(file);
+            scriptEngine.eval(_reader);
+            if(configuration.getBoolean(DF_SCRIPT_DISPLAY_OUTPUT))
             {
-                System.out.printf("%s\r\n", stringWriter.toString());
+                LOG.info(String.format("%s\r\n", stringWriter.toString()));
             }
-        }
-        catch (IOException ex)
-        {
-            System.out.println(ex.getMessage());
-            //ex.printStackTrace();
         }
         catch (Exception ex)
         {
+            LOG.error(ex.getMessage());
             ex.printStackTrace();
         }
-        return _dropMessage;
+        return dropMessage;
     }
 
     @Override
@@ -210,11 +204,11 @@ public class dfchBizExecScript implements MessageFilter
     @Override
     public int getPriority()
     {
-        if(!_isRunning)
+        if(!isRunning.get())
         {
             return 99;
         }
-        return Integer.parseInt(_configuration.getString(DF_PLUGIN_PRIORITY));
+        return Integer.parseInt(configuration.getString(DF_PLUGIN_PRIORITY));
     }
 
 

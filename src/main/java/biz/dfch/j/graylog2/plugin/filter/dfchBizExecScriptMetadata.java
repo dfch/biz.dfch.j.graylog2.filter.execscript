@@ -1,18 +1,22 @@
 package biz.dfch.j.graylog2.plugin.filter;
 
 import org.graylog2.plugin.PluginMetaData;
+import org.graylog2.plugin.ServerStatus;
 import org.graylog2.plugin.Version;
 
 import java.net.URI;
+import java.util.Collections;
+import java.util.Set;
 
 /**
  * Implement the PluginMetaData interface here.
  */
-public class dfchBizExecScriptMetadata implements PluginMetaData {
+public class dfchBizExecScriptMetadata implements PluginMetaData
+{
     @Override
     public String getUniqueId()
     {
-        return "b87fc5fa-9fee-44c6-8f7e-82d5059803b4";
+        return "biz.dfch.j.graylog2.plugin.filter.dfchBizExecScriptPlugin";
     }
     @Override
     public String getName()
@@ -27,7 +31,7 @@ public class dfchBizExecScriptMetadata implements PluginMetaData {
     @Override
     public URI getURL()
     {
-        return URI.create("http://www.d-fens.ch");
+        return URI.create("http://d-fens.ch");
     }
     @Override
     public Version getVersion()
@@ -42,7 +46,12 @@ public class dfchBizExecScriptMetadata implements PluginMetaData {
     @Override
     public Version getRequiredVersion()
     {
-        return new Version(0, 90, 0);
+        return new Version(1, 0, 0);
+    }
+    @Override
+    public Set<ServerStatus.Capability> getRequiredCapabilities()
+    {
+        return Collections.emptySet();
     }
 }
 
